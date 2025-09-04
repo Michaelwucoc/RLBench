@@ -36,6 +36,17 @@ train_tasks = MT30_V1['train']
 training_cycles_per_task = 3
 training_steps_per_task = 80
 episode_length = 40
+# Someone dead here
+# o<-<
+    #              .--------.
+    #      .------/  ======  \------.
+    #     /  _  _|  [POLICE]  |_  _  \
+    #    /__/ \_\|  ________  |/_/ \__\
+    #   /  _    _| /  ____  \ | _    _ \
+    #  /__/ \__/ |/__/    \__\| \__/ \__\
+    # |  _  _  _ |  _  __  _  | _  _  _  |
+    # |_/ \/ \/ \|_/ \/  \/ \_|/ \/ \/ \_|
+    # ( O )----( O )----( O )----( O )
 
 for _ in range(training_cycles_per_task):
 
