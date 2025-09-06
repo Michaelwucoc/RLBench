@@ -32,12 +32,16 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y xvfb qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev qttools5-dev-tools libgl1-mesa-glx libglib2.0-0
+          sudo apt-get install -y xvfb qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev qttools5-dev-tools libgl1-mesa-glx libglib2.0-0 mesa-utils libglu1-mesa libxrender1 libxext6
 
       - name: Set up virtual display
         run: |
-          # start xvfb in the background
-          sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 &
+          # start xvfb in the background with OpenGL support
+          sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &
+          # Wait for Xvfb to start
+          sleep 2
+          # Verify OpenGL support
+          glxinfo | grep "OpenGL version" || echo "OpenGL info not available"
 
       - name: Download and setup CoppeliaSim
         run: |
