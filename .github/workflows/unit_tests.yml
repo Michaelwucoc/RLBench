@@ -32,12 +32,13 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y xvfb qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev qttools5-dev-tools libgl1-mesa-glx libglib2.0-0
+          sudo apt-get install -y xvfb qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev qttools5-dev-tools libgl1-mesa-glx libglib2.0-0 libgl1-mesa-dri libxrender1 libxext6 libxrandr2 libxss1 libgconf-2-4 libasound2 libxtst6 libxrandr2 libxss1 libgconf-2-4 libasound2 libxtst6 libxi6 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxinerama1 libxrender1 libxss1 libxtst6 libxrandr2 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxinerama1
 
       - name: Set up virtual display
         run: |
-          # start xvfb in the background
-          sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 &
+          # start xvfb in the background with proper OpenGL support
+          sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &
+          sleep 3
 
       - name: Download and setup CoppeliaSim
         run: |
@@ -50,10 +51,22 @@ jobs:
           export QT_QPA_PLATFORM_PLUGIN_PATH=$COPPELIASIM_ROOT
           # Set Qt5 platform plugin for Ubuntu 22.04 compatibility
           export QT_QPA_PLATFORM=offscreen
+          # Additional OpenGL and Qt environment variables for headless operation
+          export MESA_GL_VERSION_OVERRIDE=3.3
+          export MESA_GLSL_VERSION_OVERRIDE=330
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export QT_X11_NO_MITSHM=1
+          export QT_QUICK_BACKEND=software
+          export QT_QPA_PLATFORM_PLUGIN_PATH=$COPPELIASIM_ROOT/platforms
           echo "COPPELIASIM_ROOT=$COPPELIASIM_ROOT" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
           echo "QT_QPA_PLATFORM_PLUGIN_PATH=$QT_QPA_PLATFORM_PLUGIN_PATH" >> $GITHUB_ENV
           echo "QT_QPA_PLATFORM=$QT_QPA_PLATFORM" >> $GITHUB_ENV
+          echo "MESA_GL_VERSION_OVERRIDE=$MESA_GL_VERSION_OVERRIDE" >> $GITHUB_ENV
+          echo "MESA_GLSL_VERSION_OVERRIDE=$MESA_GLSL_VERSION_OVERRIDE" >> $GITHUB_ENV
+          echo "LIBGL_ALWAYS_SOFTWARE=$LIBGL_ALWAYS_SOFTWARE" >> $GITHUB_ENV
+          echo "QT_X11_NO_MITSHM=$QT_X11_NO_MITSHM" >> $GITHUB_ENV
+          echo "QT_QUICK_BACKEND=$QT_QUICK_BACKEND" >> $GITHUB_ENV
 
       - name: Install Python dependencies
         run: |
@@ -62,4 +75,11 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest -v -n auto tests/unit
+          # Set additional environment variables for testing
+          export PYTHONPATH=$PYTHONPATH:$PWD
+          export OMP_NUM_THREADS=1
+          export OPENBLAS_NUM_THREADS=1
+          export MKL_NUM_THREADS=1
+          export NUMEXPR_NUM_THREADS=1
+          # Run tests with timeout and better error handling
+          timeout 1800 pytest -v -n auto --tb=short --maxfail=5 tests/unit
